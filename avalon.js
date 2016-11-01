@@ -30,11 +30,6 @@ $(document).ready(function() {
     $('#role').show();
     $('#content').text(chararray[0]);
 
-    // Scroll do the bottom area where Players and their roles are displayed
-    $('html,body').animate({
-      scrollTop: $('#next').offset().top
-    }, 'slow');
-
     // Populate Merlin, Perceival and Evil arrays with roles they can see
     $.each(charobj, function (key, value) {
       if (value === 'Minion' || value === 'Assassin') {
