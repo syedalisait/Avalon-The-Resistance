@@ -75,10 +75,10 @@ $(document).ready(function() {
     }
 
     else if (charobj[chararray[counter]] === 'Oberon') {
-      $('#revealplayer').text('You are Evil. Help Other Evil Players');
+      $('#revealplayer').text('You are Evil');
     }
     else {
-      $('#revealplayer').text('You are Arthur. Help Perceival and Merlin');
+      $('#revealplayer').text('You are Good');
     }
   });
 
