@@ -1,0 +1,19 @@
+
+.marginset {
+  margin-top: 1%;
+}
+
+.heightincrease {
+  height: 50px;
+  font-size: 30px;
+  margin-top: 5%;
+  font-family: monospace;
+}
+
+#next {
+  display: none;
+}
+
+#role {
+  display: none;
+}
