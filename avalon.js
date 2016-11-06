@@ -2,7 +2,7 @@ var charobj = {};
 var chararray = [];
 var i = 0;
 $(document).ready(function() {
-  $('#submitchar').click(function() {
+  $('#submitcharacter').click(function() {
     var character = $('input[name=characters]:checked').val();
     var name = $('#playername').val();
     chararray[i] = name;
@@ -23,9 +23,9 @@ $(document).ready(function() {
   var Perceival = [];
   var Evil = [];
 
-  $('#reveal').click(function() {
-    $('#reveal').prop('disabled', true);
-    $('#submitchar').prop('disabled', true);
+  $('#revealrole').click(function() {
+    $('#revealrole').prop('disabled', true);
+    $('#submitcharacter').prop('disabled', true);
     $('#next').show();
     $('#role').show();
     $('#content').text(chararray[0]);
@@ -44,6 +44,9 @@ $(document).ready(function() {
         Merlin.push(key);
         Evil.push(key);
       }
+      else if (value === 'Modred') {
+        Evil.push(key);
+      }
       else if (value === 'Oberon') {
         Merlin.push(key);
       }
@@ -54,7 +57,7 @@ $(document).ready(function() {
 
   // When Role button is selected, Parse through the hash
   // to find the role of the player and also reveal other
-  // appropriate players who will visible to them
+  // appropriate players who will be visible to them
   var counter = 0;
   $('#role').click(function() {
     //console.log(charobj[chararray[counter]]);
