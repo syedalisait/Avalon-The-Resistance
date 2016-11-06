@@ -1,17 +1,32 @@
-var charobj = {};
-var chararray = [];
-var i = 0;
+var characterhash = {};
+var characterarray = [];
+
 $(document).ready(function() {
   $('#submitcharacter').click(function() {
     var character = $('input[name=characters]:checked').val();
-    var name = $('#playername').val();
-    chararray[i] = name;
-    i++;
-    charobj[name] = character;
+    var name = ToTitleCase($('#playername').val());
+
+    // Validation for name and role
+    if (name.trim().length === 0 || character === undefined) {
+      alert("Enter a name and select your role");
+      return false;
+    }
+
+    // Validation for duplicate roles entered except Arthur and Minion
+    if (!(character === 'Minion' || character === 'Arthur')) {
+      var returnvalue = $.inArray(character, Object.values(characterhash));
+      console.log(returnvalue, character);
+      if (returnvalue !== -1) {
+        alert('This role is already taken. Stop the game if this is your role or Select a different role');
+        return false;
+      }
+    }
+    characterhash[name] = character;
+    characterarray.push(name);
     $('input[name=characters]:checked').prop('checked', false);
     $('#playername').val('');
     //console.log(name, character);
-    //console.log(charobj,chararray);
+    //console.log(characterhash, characterarray);
   });
 
 
@@ -28,10 +43,10 @@ $(document).ready(function() {
     $('#submitcharacter').prop('disabled', true);
     $('#next').show();
     $('#role').show();
-    $('#content').text(chararray[0]);
+    $('#content').text(characterarray[0]);
 
     // Populate Merlin, Perceival and Evil arrays with roles they can see
-    $.each(charobj, function (key, value) {
+    $.each(characterhash, function (key, value) {
       if (value === 'Minion' || value === 'Assassin') {
         Evil.push(key);
         Merlin.push(key);
@@ -60,24 +75,24 @@ $(document).ready(function() {
   // appropriate players who will be visible to them
   var counter = 0;
   $('#role').click(function() {
-    //console.log(charobj[chararray[counter]]);
-    $('#content').text(chararray[counter] + ' : ' + charobj[chararray[counter]]);
-    if (charobj[chararray[counter]] === 'Merlin') {
-      $('#revealplayer').text('Evil: ' + Merlin);
+    //console.log(characterhash[characterarray[counter]]);
+    $('#content').text(characterarray[counter] + ' : ' + characterhash[characterarray[counter]]);
+    if (characterhash[characterarray[counter]] === 'Merlin') {
+      $('#revealplayer').text('Evil: ' + Merlin.join(', '));
     }
 
-    else if (charobj[chararray[counter]] === 'Perceival') {
-      $('#revealplayer').text('Merlin/Morgana: ' + Perceival);
+    else if (characterhash[characterarray[counter]] === 'Perceival') {
+      $('#revealplayer').text('Merlin/Morgana: ' + Perceival.join(', '));
     }
 
-    else if (charobj[chararray[counter]] === 'Modred' ||
-    charobj[chararray[counter]] === 'Minion' ||
-    charobj[chararray[counter]] === 'Morgana' ||
-    charobj[chararray[counter]] === 'Assassin') {
-      $('#revealplayer').text('Evil: ' + Evil);
+    else if (characterhash[characterarray[counter]] === 'Modred' ||
+    characterhash[characterarray[counter]] === 'Minion' ||
+    characterhash[characterarray[counter]] === 'Morgana' ||
+    characterhash[characterarray[counter]] === 'Assassin') {
+      $('#revealplayer').text('Evil: ' + Evil.join(', '));
     }
 
-    else if (charobj[chararray[counter]] === 'Oberon') {
+    else if (characterhash[characterarray[counter]] === 'Oberon') {
       $('#revealplayer').text('You are Evil');
     }
     else {
@@ -89,7 +104,7 @@ $(document).ready(function() {
   // and visibility. Show the current player name alone
   // Disable Next and role button once we parse all the players
   $('#next').click(function() {
-    if (counter == i - 1) {
+    if (counter == characterarray.length - 1) {
       $('#next').prop('disabled', true);
       $('#role').prop('disabled', true);
       $('#content').text('');
@@ -97,8 +112,17 @@ $(document).ready(function() {
     }
     else {
       counter++;
-      $('#content').text(chararray[counter]);
+      $('#content').text(characterarray[counter]);
       $('#revealplayer').text('');
     }
   });
+
+  // To convert the normal string to ToTitleCase
+  // Example: hello world -> Hello World
+  var ToTitleCase = function (str) {
+    // regex to match first letter of a group of words
+    return str.replace(/^(\w)|(\s\w)/g, function(match) {
+        return match.toUpperCase();
+    });
+}
 });
