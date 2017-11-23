@@ -7,6 +7,8 @@ For more info regarding the game, visit: http://web.eecs.umich.edu/~gameprof/gam
 
 On how to play the game, visit: http://upload.snakesandlattes.com/rules/r/ResistanceAvalon.pdf
 
+Website: https://syedalisait.github.io/Avalon-The-Resistance/
+
 So the initial part of Avalon game starts with players closing their eyes.
 
 1. First the Evil players alone open their eyes to see each other
