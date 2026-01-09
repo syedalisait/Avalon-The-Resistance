@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -11,62 +13,81 @@ function App() {
         </h1>
 
         <p className="text-text-secondary text-lg">
-          Vite + React 19 + TypeScript + Tailwind CSS v4
+          Vite + React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui
         </p>
 
         <div className="flex gap-4 justify-center flex-wrap">
-          <div className="px-6 py-3 bg-good rounded-lg text-white font-semibold">
+          <Button variant="good" size="lg">
             ✓ Good Team
-          </div>
-          <div className="px-6 py-3 bg-evil rounded-lg text-white font-semibold">
+          </Button>
+          <Button variant="evil" size="lg">
             ✗ Evil Team
-          </div>
+          </Button>
         </div>
 
-        <div className="bg-bg-secondary rounded-xl p-8 space-y-4 border border-border">
-          <button
-            onClick={() => setCount((count) => count + 1)}
-            className="px-6 py-3 bg-accent hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors"
-          >
-            Count: {count}
-          </button>
-
-          <p className="text-text-secondary text-sm">
-            Tailwind CSS is configured! Click the button to test reactivity.
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Interactive Demo</CardTitle>
+            <CardDescription>
+              Testing shadcn/ui components with Tailwind CSS
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={() => setCount((count) => count + 1)} size="lg">
+              Count: {count}
+            </Button>
+            <div className="flex gap-2 flex-wrap justify-center">
+              <Button variant="good">Good</Button>
+              <Button variant="evil">Evil</Button>
+              <Button variant="outline">Outline</Button>
+              <Button variant="ghost">Ghost</Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-merlin p-6 rounded-lg text-white">
-            <div className="text-3xl mb-2">🧙</div>
-            <div className="font-semibold text-lg">Merlin</div>
-            <div className="text-sm opacity-90">Good</div>
-          </div>
-          <div className="bg-morgana p-6 rounded-lg text-white">
-            <div className="text-3xl mb-2">🔮</div>
-            <div className="font-semibold text-lg">Morgana</div>
-            <div className="text-sm opacity-90">Evil</div>
-          </div>
-          <div className="bg-perceival p-6 rounded-lg text-white">
-            <div className="text-3xl mb-2">🛡️</div>
-            <div className="font-semibold text-lg">Perceival</div>
-            <div className="text-sm opacity-90">Good</div>
-          </div>
-          <div className="bg-assassin p-6 rounded-lg text-white">
-            <div className="text-3xl mb-2">🗡️</div>
-            <div className="font-semibold text-lg">Assassin</div>
-            <div className="text-sm opacity-90">Evil</div>
-          </div>
-          <div className="bg-modred p-6 rounded-lg text-white">
-            <div className="text-3xl mb-2">⚔️</div>
-            <div className="font-semibold text-lg">Modred</div>
-            <div className="text-sm opacity-90">Evil</div>
-          </div>
-          <div className="bg-oberon p-6 rounded-lg text-white">
-            <div className="text-3xl mb-2">👁️</div>
-            <div className="font-semibold text-lg">Oberon</div>
-            <div className="text-sm opacity-90">Evil</div>
-          </div>
+          <Card className="bg-merlin border-none text-white">
+            <CardContent className="pt-6 text-center">
+              <div className="text-3xl mb-2">🧙</div>
+              <div className="font-semibold text-lg">Merlin</div>
+              <div className="text-sm opacity-90">Good</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-morgana border-none text-white">
+            <CardContent className="pt-6 text-center">
+              <div className="text-3xl mb-2">🔮</div>
+              <div className="font-semibold text-lg">Morgana</div>
+              <div className="text-sm opacity-90">Evil</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-perceival border-none text-white">
+            <CardContent className="pt-6 text-center">
+              <div className="text-3xl mb-2">🛡️</div>
+              <div className="font-semibold text-lg">Perceival</div>
+              <div className="text-sm opacity-90">Good</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-assassin border-none text-white">
+            <CardContent className="pt-6 text-center">
+              <div className="text-3xl mb-2">🗡️</div>
+              <div className="font-semibold text-lg">Assassin</div>
+              <div className="text-sm opacity-90">Evil</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-modred border-none text-white">
+            <CardContent className="pt-6 text-center">
+              <div className="text-3xl mb-2">⚔️</div>
+              <div className="font-semibold text-lg">Modred</div>
+              <div className="text-sm opacity-90">Evil</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-oberon border-none text-white">
+            <CardContent className="pt-6 text-center">
+              <div className="text-3xl mb-2">👁️</div>
+              <div className="font-semibold text-lg">Oberon</div>
+              <div className="text-sm opacity-90">Evil</div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
