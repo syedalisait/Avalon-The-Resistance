@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import { ROLES } from '@/lib/game-rules';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import type { Player } from '@/types/game.types';
 
 export function RoleReveal() {
   const [isRevealed, setIsRevealed] = useState(false);
@@ -127,7 +128,7 @@ export function RoleReveal() {
                   : '👁️ You see these players on your team:'}
               </h3>
               <div className="space-y-2">
-                {visiblePlayers.map((player) => (
+                {visiblePlayers.map((player: Player) => (
                   <div
                     key={player.id}
                     className="flex items-center gap-3 p-3 bg-bg-tertiary rounded-lg"

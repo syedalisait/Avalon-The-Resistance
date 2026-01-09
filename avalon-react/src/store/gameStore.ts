@@ -24,7 +24,7 @@ interface GameState {
   getCurrentPlayer: () => Player | null;
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
+export const useGameStore = create<GameState>()((set, get) => ({
   players: [],
   currentPlayerIndex: 0,
   phase: 'setup',

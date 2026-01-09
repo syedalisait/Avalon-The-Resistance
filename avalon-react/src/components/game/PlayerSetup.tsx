@@ -6,7 +6,7 @@ import { ROLES } from '@/lib/game-rules';
 import { validatePlayerName, validatePlayers, toTitleCase } from '@/lib/validators';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import type { Role } from '@/types/game.types';
+import type { Role, Player } from '@/types/game.types';
 
 export function PlayerSetup() {
   const [name, setName] = useState('');
@@ -34,7 +34,7 @@ export function PlayerSetup() {
     // Check if role is already taken (if not duplicable)
     const roleInfo = ROLES[selectedRole];
     if (!roleInfo.canDuplicate) {
-      const isTaken = players.some(p => p.role === selectedRole);
+      const isTaken = players.some((p: Player) => p.role === selectedRole);
       if (isTaken) {
         setError(`${selectedRole} is already taken`);
         return;
@@ -60,7 +60,7 @@ export function PlayerSetup() {
 
   const isRoleTaken = (role: Role) => {
     if (ROLES[role].canDuplicate) return false;
-    return players.some(p => p.role === role);
+    return players.some((p: Player) => p.role === role);
   };
 
   const validation = validatePlayers(players);
@@ -166,7 +166,7 @@ export function PlayerSetup() {
                 Players Added ({players.length}/10)
               </h3>
               <div className="space-y-2 mb-4">
-                {players.map((player) => (
+                {players.map((player: Player) => (
                   <div
                     key={player.id}
                     className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg"
