@@ -1,6 +1,6 @@
 // Role Reveal component - Show each player their role and visible players
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { ROLES } from '@/lib/game-rules';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,12 @@ import type { Player } from '@/types/game.types';
 
 type RevealStage = 'pass' | 'blur' | 'revealed';
 
+const REVEAL_DELAY_SECONDS = 5;
+
 export function RoleReveal() {
   const [revealStage, setRevealStage] = useState<RevealStage>('pass');
+  const [isRevealing, setIsRevealing] = useState(false);
+  const [countdown, setCountdown] = useState(REVEAL_DELAY_SECONDS);
   const { getCurrentPlayer, getVisiblePlayers, nextPlayer, phase, resetGame } = useGameStore();
 
   const currentPlayer = getCurrentPlayer();
@@ -23,12 +27,26 @@ export function RoleReveal() {
   const visiblePlayers = getVisiblePlayers(currentPlayer.id);
   const isGood = roleInfo.alignment === 'Good';
 
+  // Countdown timer effect
+  useEffect(() => {
+    if (isRevealing && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (isRevealing && countdown === 0) {
+      setIsRevealing(false);
+      setRevealStage('revealed');
+      setCountdown(REVEAL_DELAY_SECONDS);
+    }
+  }, [isRevealing, countdown]);
+
   const handlePassToPlayer = () => {
     setRevealStage('blur');
   };
 
   const handleReveal = () => {
-    setRevealStage('revealed');
+    setIsRevealing(true);
   };
 
   const handleNext = () => {
@@ -110,16 +128,29 @@ export function RoleReveal() {
             {currentPlayer.name}
           </h1>
           <p className="text-text-secondary text-lg">
-            Tap to reveal your role
+            {isRevealing ? 'Reading your role...' : 'Tap to reveal your role'}
           </p>
 
           <Card className="bg-bg-secondary border-border">
             <CardContent className="pt-6 space-y-4">
               <div className="p-8 bg-bg-tertiary rounded-lg border-2 border-dashed border-border">
-                <div className="text-6xl mb-4 blur-lg select-none">🎭</div>
-                <div className="text-xl text-text-secondary blur-md select-none">
-                  Your Role
-                </div>
+                {isRevealing ? (
+                  <>
+                    <div className="text-8xl font-bold mb-2 text-accent animate-pulse">
+                      {countdown}
+                    </div>
+                    <div className="text-lg text-text-secondary">
+                      Reading role information...
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-6xl mb-4 blur-lg select-none">🎭</div>
+                    <div className="text-xl text-text-secondary blur-md select-none">
+                      Your Role
+                    </div>
+                  </>
+                )}
               </div>
 
               <Button
@@ -127,12 +158,13 @@ export function RoleReveal() {
                 size="lg"
                 variant="good"
                 className="w-full text-lg py-6"
+                disabled={isRevealing}
               >
-                👁️ Reveal My Role
+                {isRevealing ? `⏱️ Revealing... (${countdown}s)` : '👁️ Reveal My Role'}
               </Button>
 
               <p className="text-sm text-accent">
-                ⚠️ Show this to NO ONE else!
+                ⚠️ {isRevealing ? 'Please wait for the reveal...' : 'Show this to NO ONE else!'}
               </p>
             </CardContent>
           </Card>
