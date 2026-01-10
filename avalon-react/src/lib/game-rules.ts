@@ -30,6 +30,12 @@ export const GAME_CONFIG: GameConfig = {
   }
 };
 
+// Role presets for automatic assignment (6 and 7 player games)
+export const ROLE_PRESETS: Record<number, Role[]> = {
+  6: ['Merlin', 'Perceival', 'Arthur', 'Morgana', 'Assassin', 'Arthur'],
+  7: ['Merlin', 'Perceival', 'Arthur', 'Arthur', 'Morgana', 'Assassin', 'Minion']
+};
+
 export const ROLES: Record<Role, RoleDefinition> = {
   Merlin: {
     name: 'Merlin',
@@ -146,4 +152,38 @@ export function calculateVisiblePlayers(allPlayers: Player[], currentPlayer: Pla
     default:
       return [];
   }
+}
+
+// Fisher-Yates shuffle algorithm for randomizing role assignment
+export function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array]; // Create a copy to avoid mutating original
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Assign roles randomly to player names based on player count
+export function assignRoles(playerNames: string[], playerCount: number): Player[] {
+  // Get the preset roles for this player count
+  const roles = ROLE_PRESETS[playerCount];
+
+  if (!roles) {
+    throw new Error(`No role preset found for ${playerCount} players`);
+  }
+
+  if (playerNames.length !== playerCount) {
+    throw new Error(`Expected ${playerCount} player names, got ${playerNames.length}`);
+  }
+
+  // Shuffle the roles to randomize assignment
+  const shuffledRoles = shuffleArray(roles);
+
+  // Create Player objects by zipping names with shuffled roles
+  return playerNames.map((name, index) => ({
+    id: crypto.randomUUID(),
+    name,
+    role: shuffledRoles[index]
+  }));
 }
