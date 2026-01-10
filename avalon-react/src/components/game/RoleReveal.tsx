@@ -127,21 +127,41 @@ export function RoleReveal() {
                   ? '👁️ You see these EVIL players (except Modred):'
                   : '👁️ You see these players on your team:'}
               </h3>
+
+              {/* Special message for Perceival */}
+              {currentPlayer.role === 'Perceival' && (
+                <div className="mb-3 p-3 bg-accent bg-opacity-10 border border-accent rounded-lg">
+                  <p className="text-accent text-sm text-center">
+                    ⚠️ One is Merlin, one is Morgana - you cannot tell which is which!
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2">
-                {visiblePlayers.map((player: Player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center gap-3 p-3 bg-bg-tertiary rounded-lg"
-                  >
-                    <span className="text-2xl">{ROLES[player.role].emoji}</span>
-                    <div>
-                      <div className="font-medium text-text-primary">{player.name}</div>
-                      {currentPlayer.role !== 'Perceival' && (
-                        <div className="text-xs text-text-secondary">{player.role}</div>
-                      )}
+                {visiblePlayers.map((player: Player) => {
+                  // Merlin sees names + roles with role emoji
+                  const isMerlin = currentPlayer.role === 'Merlin';
+
+                  // Perceival and Evil see only names with generic emoji
+                  const showRoleInfo = isMerlin;
+
+                  return (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-3 p-3 bg-bg-tertiary rounded-lg"
+                    >
+                      <span className="text-2xl">
+                        {showRoleInfo ? ROLES[player.role].emoji : '👤'}
+                      </span>
+                      <div>
+                        <div className="font-medium text-text-primary">{player.name}</div>
+                        {showRoleInfo && (
+                          <div className="text-xs text-text-secondary">{player.role}</div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
