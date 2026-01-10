@@ -30,7 +30,7 @@ export function PlayerCountSelection() {
         </div>
 
         {/* Player Count Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
           {/* 6 Players */}
           <Card
             className="bg-bg-secondary border-good hover:bg-bg-tertiary transition-all cursor-pointer"
@@ -72,7 +72,7 @@ export function PlayerCountSelection() {
               </div>
 
               <div className="pt-2 text-center">
-                <Button variant="good" size="lg" className="w-full">
+                <Button variant="good" size="lg" className="w-full animate-pulse-subtle">
                   Choose 6 Players →
                 </Button>
               </div>
@@ -121,7 +121,7 @@ export function PlayerCountSelection() {
               </div>
 
               <div className="pt-2 text-center">
-                <Button variant="good" size="lg" className="w-full">
+                <Button variant="good" size="lg" className="w-full animate-pulse-subtle">
                   Choose 7 Players →
                 </Button>
               </div>

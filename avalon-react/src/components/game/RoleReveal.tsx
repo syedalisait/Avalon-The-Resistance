@@ -80,7 +80,7 @@ export function RoleReveal() {
             onClick={revealGameSummary}
             size="lg"
             variant="good"
-            className="w-full text-lg py-6"
+            className="w-full text-lg py-6 animate-pulse-subtle"
           >
             🎯 Finish Game & Reveal All Roles
           </Button>
@@ -186,7 +186,7 @@ export function RoleReveal() {
             onClick={handlePassToPlayer}
             size="lg"
             variant="good"
-            className="w-full text-lg py-6"
+            className="w-full text-lg py-6 animate-pulse-subtle"
           >
             I'm {currentPlayer.name}, Reveal My Role →
           </Button>
@@ -240,7 +240,7 @@ export function RoleReveal() {
                 onClick={handleReveal}
                 size="lg"
                 variant="good"
-                className="w-full text-lg py-6"
+                className={`w-full text-lg py-6 ${!isRevealing ? 'animate-pulse-subtle' : ''}`}
                 disabled={isRevealing}
               >
                 {isRevealing ? `⏱️ Revealing... (${countdown}s)` : '👁️ Reveal My Role'}
@@ -354,7 +354,7 @@ export function RoleReveal() {
           onClick={handleNext}
           size="lg"
           variant="good"
-          className="w-full text-lg py-6"
+          className="w-full text-lg py-6 animate-pulse-subtle"
         >
           ✓ I've Memorized My Role → Next Player
         </Button>

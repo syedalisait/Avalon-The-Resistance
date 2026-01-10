@@ -1,6 +1,6 @@
 // Player Setup component - Collect player names for automatic role assignment
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { validatePlayerName, toTitleCase } from '@/lib/validators';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ export function PlayerSetup() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [isShuffling, setIsShuffling] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const { players, playerCount, addPlayer, removePlayer, assignRolesAndStart, setPhase } = useGameStore();
 
@@ -34,6 +35,11 @@ export function PlayerSetup() {
 
     // Reset form
     setName('');
+
+    // Focus back to input after adding player
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   };
 
   const handleShuffleAndStart = async () => {
@@ -77,6 +83,7 @@ export function PlayerSetup() {
                 Player Name
               </label>
               <input
+                ref={inputRef}
                 id="playerName"
                 type="text"
                 value={name}
@@ -98,7 +105,7 @@ export function PlayerSetup() {
             {/* Add Player Button */}
             <Button
               onClick={handleAddPlayer}
-              className="w-full"
+              className={`w-full ${canAddMore ? 'animate-pulse-subtle' : ''}`}
               size="lg"
               variant="good"
               disabled={!canAddMore}
@@ -150,7 +157,7 @@ export function PlayerSetup() {
               <Button
                 onClick={handleShuffleAndStart}
                 disabled={!allPlayersAdded || isShuffling}
-                className="w-full"
+                className={`w-full ${allPlayersAdded && !isShuffling ? 'animate-pulse-subtle' : ''}`}
                 size="lg"
                 variant={allPlayersAdded ? "good" : "outline"}
               >

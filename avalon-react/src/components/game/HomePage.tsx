@@ -83,7 +83,7 @@ export function HomePage() {
             onClick={handlePlayGame}
             size="lg"
             variant="good"
-            className="text-xl py-6 px-12"
+            className="text-xl py-6 px-12 animate-pulse-subtle"
           >
             ▶️ Play Game
           </Button>
