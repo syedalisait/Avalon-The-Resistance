@@ -13,7 +13,9 @@ export type Role =
 export type Alignment = 'Good' | 'Evil';
 
 export type GamePhase =
+  | 'home'              // Landing page
   | 'mode-selection'    // Choose: Role Revelation only or Full Game
+  | 'player-count'      // Choose number of players (6 or 7)
   | 'setup'             // Add players and assign roles
   | 'reveal'            // Show each player their role
   | 'mission'           // Full game: mission selection (future)

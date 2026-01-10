@@ -3,17 +3,20 @@
 import { create } from 'zustand';
 import { calculateVisiblePlayers } from '@/lib/game-rules';
 import { validatePlayers } from '@/lib/validators';
-import type { Player, GamePhase, Role } from '@/types/game.types';
+import type { Player, GamePhase, Role, GameMode } from '@/types/game.types';
 
 interface GameState {
   // Data
   players: Player[];
   currentPlayerIndex: number;
   phase: GamePhase;
+  gameMode: GameMode | null;
 
   // Actions
   addPlayer: (name: string, role: Role) => void;
   removePlayer: (playerId: string) => void;
+  setPhase: (phase: GamePhase) => void;
+  setGameMode: (mode: GameMode) => void;
   startReveal: () => void;
   nextPlayer: () => void;
   resetGame: () => void;
@@ -27,7 +30,8 @@ interface GameState {
 export const useGameStore = create<GameState>()((set, get) => ({
   players: [],
   currentPlayerIndex: 0,
-  phase: 'setup',
+  phase: 'home',
+  gameMode: null,
 
   addPlayer: (name, role) => set((state) => ({
     players: [...state.players, {
@@ -40,6 +44,10 @@ export const useGameStore = create<GameState>()((set, get) => ({
   removePlayer: (playerId) => set((state) => ({
     players: state.players.filter(p => p.id !== playerId)
   })),
+
+  setPhase: (phase) => set({ phase }),
+
+  setGameMode: (mode) => set({ gameMode: mode }),
 
   startReveal: () => {
     const { isValidGame } = get();
@@ -59,7 +67,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
   resetGame: () => set({
     players: [],
     currentPlayerIndex: 0,
-    phase: 'setup'
+    phase: 'home',
+    gameMode: null
   }),
 
   isValidGame: () => {
