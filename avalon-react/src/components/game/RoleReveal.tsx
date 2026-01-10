@@ -210,7 +210,10 @@ export function RoleReveal() {
 
           <Card className="bg-bg-secondary border-border">
             <CardContent className="pt-6 space-y-4">
-              <div className="p-8 bg-bg-tertiary rounded-lg border-2 border-dashed border-border">
+              <div
+                className="p-8 bg-bg-tertiary rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-opacity-80 transition-all"
+                onClick={!isRevealing ? handleReveal : undefined}
+              >
                 {isRevealing ? (
                   <>
                     <div className="text-8xl font-bold mb-2 text-accent animate-pulse">
@@ -225,6 +228,9 @@ export function RoleReveal() {
                     <div className="text-6xl mb-4 blur-lg select-none">🎭</div>
                     <div className="text-xl text-text-secondary blur-md select-none">
                       Your Role
+                    </div>
+                    <div className="text-sm text-good mt-4 font-medium">
+                      Tap here or button below to reveal
                     </div>
                   </>
                 )}
