@@ -1,713 +1,1105 @@
-# Avalon - The Resistance: Technical Documentation
+# Avalon - The Resistance: React App Technical Documentation
 
 ## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Architecture](#architecture)
-3. [Technology Stack](#technology-stack)
-4. [Game Flow & Logic](#game-flow--logic)
-5. [Character Roles & Visibility Rules](#character-roles--visibility-rules)
-6. [File Structure](#file-structure)
-7. [Code Analysis](#code-analysis)
-8. [Current Limitations](#current-limitations)
-9. [Development Notes](#development-notes)
+1. [Introduction for Non-React Developers](#introduction-for-non-react-developers)
+2. [Tech Stack Explained](#tech-stack-explained)
+3. [Project Structure](#project-structure)
+4. [Key React Concepts](#key-react-concepts)
+5. [Game Flow Architecture](#game-flow-architecture)
+6. [Component Breakdown](#component-breakdown)
+7. [State Management with Zustand](#state-management-with-zustand)
+8. [Role Visibility Logic](#role-visibility-logic)
+9. [Styling with Tailwind CSS](#styling-with-tailwind-css)
+10. [React Patterns Used](#react-patterns-used)
+11. [Adding New Features](#adding-new-features)
+12. [Troubleshooting](#troubleshooting)
+13. [Deployment](#deployment)
+14. [Future Full Game Features](#future-full-game-features)
 
 ---
 
-## Project Overview
+## Introduction for Non-React Developers
 
-**Avalon - The Resistance** is a web-based utility tool designed to facilitate the initial role revelation phase of the board game "The Resistance: Avalon" without requiring players to close their eyes.
+This document explains the Avalon React app for developers who may not be familiar with React. Think of this as a beginner-friendly guide that explains not just WHAT the code does, but WHY and HOW it works.
 
-### Purpose
-In the traditional board game, the setup phase involves:
-1. All players closing their eyes
-2. Evil players opening eyes to see each other
-3. Merlin opening eyes to see evil (except Modred)
-4. Perceival opening eyes to see Merlin and Morgana
+### What is This App?
 
-**Problem**: Players often cheat by peeking during the "eyes closed" phase.
+A web application that helps players set up the Avalon board game by:
+1. Collecting player names
+2. Randomly assigning roles
+3. Privately revealing each player's role
+4. Showing what information each role can see
 
-**Solution**: This digital tool allows players to pass a phone/device around, with each player privately viewing their role and the information visible to them.
+### Why React?
 
-### Current Scope
-- **Phase Covered**: Role assignment and revelation only
-- **Not Included**: Mission selection, voting, quest resolution, assassination phase
-- **Use Case**: Local multiplayer (same device passed around)
-- **Deployment**: Static website hosted on GitHub Pages
+React is like a **component factory** for building user interfaces. Instead of writing repetitive HTML, you create reusable "components" (like buttons, cards, forms) that can be used multiple times with different data.
 
----
-
-## Architecture
-
-### Application Type
-**100% Client-Side Static Web Application**
-
-```
-┌─────────────────────────────────────────┐
-│         Browser (Client)                │
-│  ┌────────────────────────────────────┐ │
-│  │  HTML (Structure)                  │ │
-│  │  - index.html                      │ │
-│  └────────────────────────────────────┘ │
-│  ┌────────────────────────────────────┐ │
-│  │  CSS (Styling)                     │ │
-│  │  - Bootstrap (framework)           │ │
-│  │  - avalon.css (custom)             │ │
-│  └────────────────────────────────────┘ │
-│  ┌────────────────────────────────────┐ │
-│  │  JavaScript (Logic)                │ │
-│  │  - jQuery 1.11.3                   │ │
-│  │  - avalon.js (game logic)          │ │
-│  └────────────────────────────────────┘ │
-│                                         │
-│  Data Storage: In-Memory Only          │
-│  - characterhash (Object)              │
-│  - characterarray (Array)              │
-│  - Merlin, Perceival, Evil (Arrays)    │
-└─────────────────────────────────────────┘
-```
-
-### Key Characteristics
-- **No Backend**: All logic runs in browser
-- **No Database**: Data stored in JavaScript memory (lost on refresh)
-- **No API Calls**: Except initial HTML/CSS/JS file loading
-- **Stateless**: Single-page session
-- **Deployment**: GitHub Pages (static file hosting)
-
----
-
-## Technology Stack
-
-| Component | Technology | Version | Notes |
-|-----------|-----------|---------|-------|
-| **Frontend Framework** | jQuery | 1.11.3 | Released 2014, outdated |
-| **UI Framework** | Bootstrap | 3.x | Responsive grid, buttons |
-| **Markup** | HTML5 | - | Standard semantic HTML |
-| **Styling** | CSS3 | - | Custom styles + Bootstrap |
-| **Build System** | None | - | Direct file serving |
-| **Package Manager** | None | - | Manual dependency management |
-| **Testing** | None | - | No test framework |
-| **Hosting** | GitHub Pages | - | Static site hosting |
-
-### Dependencies (Included in Repository)
-```
-jquery-1.11.3.min.js      (~84 KB)
-bootstrap.min.css         (~120 KB)
-```
-
----
-
-## Game Flow & Logic
-
-### State Machine
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    STATE: PLAYER INPUT                        │
-│  - Players enter name and select role                        │
-│  - Validation: name required, role required, no duplicates   │
-│  - Submit button stores data                                 │
-│  - Repeat for all players                                    │
-└──────────────┬───────────────────────────────────────────────┘
-               │ "Reveal Roles" clicked
-               ↓
-┌──────────────────────────────────────────────────────────────┐
-│                STATE: ROLE REVELATION SETUP                   │
-│  - Populate visibility arrays (Merlin, Perceival, Evil)      │
-│  - Disable input buttons                                     │
-│  - Show navigation buttons (Role, Next)                      │
-│  - Display first player name                                 │
-└──────────────┬───────────────────────────────────────────────┘
-               │
-               ↓
-┌──────────────────────────────────────────────────────────────┐
-│           STATE: ROLE DISPLAY LOOP (counter-based)           │
-│  [Role] button → Show player's role + visible characters     │
-│  [Next] button → Clear display, show next player name        │
-│  Repeat until all players have seen their info               │
-└──────────────┬───────────────────────────────────────────────┘
-               │ counter reaches end
-               ↓
-┌──────────────────────────────────────────────────────────────┐
-│                      STATE: COMPLETE                          │
-│  - Disable all buttons                                       │
-│  - Clear display areas                                       │
-│  - Game ready to start (offline)                             │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Data Structures
-
+**Traditional way (jQuery):**
 ```javascript
-// Global variables (all in global scope)
-var characterhash = {};      // { "PlayerName": "Role" }
-var characterarray = [];     // ["Player1", "Player2", ...]
-var Merlin = [];             // Players visible to Merlin
-var Perceival = [];          // Players visible to Perceival
-var Evil = [];               // Players visible to Evil roles
-var counter = 0;             // Current player index
+// Have to manually create and update HTML
+$('#container').html('<button>Click me</button>');
+$('#container button').click(function() { /*...*/ });
 ```
 
-**Example Data**:
-```javascript
-characterhash = {
-  "Alice": "Merlin",
-  "Bob": "Assassin",
-  "Charlie": "Morgana",
-  "David": "Perceival",
-  "Eve": "Arthur"
+**React way:**
+```jsx
+// Define a component once, reuse everywhere
+<Button onClick={handleClick}>Click me</Button>
+```
+
+---
+
+## Tech Stack Explained
+
+### 1. **React 19** - The UI Framework
+
+**What it is:** A JavaScript library for building user interfaces.
+
+**Think of it as:** A factory that produces interactive webpage "widgets" (components).
+
+**Key benefit:** Write UI components once, reuse them everywhere with different data.
+
+### 2. **TypeScript** - Type Safety
+
+**What it is:** JavaScript with type checking.
+
+**Think of it as:** Spell-check for your code.
+
+**Example:**
+```typescript
+// TypeScript catches errors before runtime
+let playerName: string = "Alice";
+playerName = 123; // ❌ Error: Type 'number' is not assignable to type 'string'
+```
+
+### 3. **Vite** - Build Tool
+
+**What it is:** A tool that:
+- Runs a development server (hot reload)
+- Bundles your code for production
+- Handles TypeScript compilation
+
+**Think of it as:** A factory assembly line that transforms your source code into optimized production code.
+
+**Commands:**
+```bash
+npm run dev   # Start development server
+npm run build # Create production bundle
+```
+
+### 4. **Tailwind CSS** - Utility-First CSS
+
+**What it is:** CSS framework with pre-built utility classes.
+
+**Think of it as:** LEGO blocks for styling.
+
+**Example:**
+```html
+<!-- Traditional CSS -->
+<style>.my-button { width: 100%; padding: 1rem; background: green; }</style>
+<button class="my-button">Click</button>
+
+<!-- Tailwind CSS -->
+<button class="w-full p-4 bg-green-500">Click</button>
+```
+
+### 5. **Zustand** - State Management
+
+**What it is:** A global store for your app's data.
+
+**Think of it as:** A shared storage box that any component can read from or write to.
+
+**Why needed:** React components need to share data (player list, current phase, etc.).
+
+### 6. **shadcn/ui** - Component Library
+
+**What it is:** Pre-built, accessible UI components.
+
+**Think of it as:** A library of professional-looking, ready-to-use components (buttons, cards, dialogs).
+
+**Key feature:** You own the code (copy-paste into your project, not a package dependency).
+
+---
+
+## Project Structure
+
+```
+avalon-react/src/
+├── components/
+│   ├── ui/                    # Reusable UI components
+│   │   ├── button.tsx         # Button with variants (good, evil, outline)
+│   │   └── card.tsx           # Card container components
+│   └── game/                  # Game-specific components
+│       ├── HomePage.tsx       # Landing page
+│       ├── GameModeSelection.tsx    # Choose game mode
+│       ├── PlayerCountSelection.tsx # Choose player count
+│       ├── PlayerSetup.tsx    # Enter player names
+│       └── RoleReveal.tsx     # Multi-stage role revelation
+├── lib/
+│   ├── game-rules.ts          # Avalon rules and role definitions
+│   ├── validators.ts          # Input validation functions
+│   └── utils.ts               # Utility functions (cn for class merging)
+├── store/
+│   └── gameStore.ts           # Zustand state management
+├── types/
+│   └── game.types.ts          # TypeScript type definitions
+├── App.tsx                    # Main app component (router)
+├── index.css                  # Global CSS + Tailwind + animations
+└── main.tsx                   # React app entry point
+```
+
+### File Explanations
+
+| File | Purpose |
+|------|---------|
+| `main.tsx` | Entry point that mounts React app to DOM |
+| `App.tsx` | Main router - shows different screens based on phase |
+| `gameStore.ts` | Global state - stores players, phase, game data |
+| `game-rules.ts` | Avalon rules - ROLES object, role presets |
+| `validators.ts` | Input validation - check names, duplicates |
+| `button.tsx` | Reusable button with variants (good/evil/outline) |
+| `card.tsx` | Reusable card container |
+| `HomePage.tsx` | Landing screen with "Play Game" button |
+| `PlayerSetup.tsx` | Screen for entering player names |
+| `RoleReveal.tsx` | Multi-screen role revelation flow |
+
+---
+
+## Key React Concepts
+
+### 1. Components = Reusable UI Building Blocks
+
+**What are components?**
+Think of components like HTML templates that accept data.
+
+**Example:**
+```tsx
+// Button component defined once
+function Button({ children, onClick }) {
+  return (
+    <button className="px-4 py-2 bg-green-500" onClick={onClick}>
+      {children}
+    </button>
+  );
 }
 
-characterarray = ["Alice", "Bob", "Charlie", "David", "Eve"]
+// Used multiple times with different data
+<Button onClick={() => alert('Play')}>Play Game</Button>
+<Button onClick={() => alert('Setup')}>Setup</Button>
+```
 
-// After "Reveal Roles" clicked:
-Merlin = ["Bob", "Charlie"]           // Assassin, Morgana (not Modred)
-Perceival = ["Alice", "Charlie"]      // Merlin, Morgana (ambiguous)
-Evil = ["Bob", "Charlie"]             // All evil see each other
+### 2. Props = Passing Data to Components
+
+**Props** are like function arguments, but for components.
+
+**Example:**
+```tsx
+// Component definition
+function PlayerCard({ name, role }) {
+  return <div>{name} is {role}</div>;
+}
+
+// Usage - passing data via props
+<PlayerCard name="Alice" role="Merlin" />
+<PlayerCard name="Bob" role="Assassin" />
+```
+
+### 3. State = Data That Can Change
+
+**State** is data that can change over time (like player list, current phase).
+
+**Example:**
+```tsx
+// useState hook creates state
+const [count, setCount] = useState(0);
+
+// Reading state
+<div>Count: {count}</div>
+
+// Updating state
+<button onClick={() => setCount(count + 1)}>Increment</button>
+```
+
+### 4. Hooks = Special Functions for React Features
+
+**Hooks** are functions that let you "hook into" React features.
+
+**Common hooks:**
+- `useState` - Create state
+- `useEffect` - Run code when something changes
+- `useRef` - Reference DOM elements
+
+**Example:**
+```tsx
+// Countdown timer using useState and useEffect
+const [countdown, setCountdown] = useState(3);
+
+useEffect(() => {
+  if (countdown > 0) {
+    setTimeout(() => setCountdown(countdown - 1), 1000);
+  }
+}, [countdown]); // Run when countdown changes
+```
+
+### 5. Conditional Rendering
+
+Show different UI based on conditions.
+
+**Example:**
+```tsx
+{phase === 'home' && <HomePage />}
+{phase === 'setup' && <PlayerSetup />}
+{phase === 'reveal' && <RoleReveal />}
 ```
 
 ---
 
-## Character Roles & Visibility Rules
+## Game Flow Architecture
 
-### Available Roles
+### Phase-Based Navigation
 
-| Role | Alignment | Can Duplicate? | Special Ability |
-|------|-----------|----------------|-----------------|
-| **Merlin** | Good | No | Sees all evil except Modred |
-| **Perceival** | Good | No | Sees Merlin + Morgana (can't distinguish) |
-| **Arthur** | Good | **Yes** | No special ability (generic good) |
-| **Morgana** | Evil | No | Appears as "Merlin" to Perceival |
-| **Modred** | Evil | No | Invisible to Merlin |
-| **Minion of Modred** | Evil | **Yes** | Generic evil, sees other evil |
-| **Assassin** | Evil | No | Sees other evil (assassination not in scope) |
-| **Oberon** | Evil | No | Invisible to other evil players |
+The app uses a **state machine** pattern with phases:
+
+```
+Phase Flow:
+home
+  ↓ (click "Play Game")
+mode-selection
+  ↓ (choose "Role Revelation")
+player-count
+  ↓ (choose 6 or 7 players)
+setup
+  ↓ (enter names, click "Shuffle & Start")
+reveal
+  ↓ (all players see roles)
+complete
+  ↓ (show game summary)
+```
+
+### Implementation (App.tsx)
+
+```tsx
+function App() {
+  const { phase } = useGameStore();
+
+  return (
+    <div className="min-h-screen bg-bg-primary">
+      {phase === 'home' && <HomePage />}
+      {phase === 'mode-selection' && <GameModeSelection />}
+      {phase === 'player-count' && <PlayerCountSelection />}
+      {phase === 'setup' && <PlayerSetup />}
+      {phase === 'reveal' && <RoleReveal />}
+    </div>
+  );
+}
+```
+
+---
+
+## Component Breakdown
+
+### 1. HomePage.tsx
+
+**Purpose:** Landing page with "Play Game" button
+
+**Key features:**
+- Hero section with game title and description
+- Feature cards (Secret Roles, Special Powers, Privacy)
+- "Play Game" button with pulse animation
+
+**Code structure:**
+```tsx
+export function HomePage() {
+  const { setPhase } = useGameStore();
+
+  const handlePlayGame = () => {
+    setPhase('mode-selection'); // Navigate to next phase
+  };
+
+  return (
+    <div className="...">
+      {/* Hero section */}
+      <h1>Avalon - The Resistance</h1>
+
+      {/* Features */}
+      <Card>Secret Roles</Card>
+      <Card>Special Powers</Card>
+
+      {/* CTA Button */}
+      <Button onClick={handlePlayGame} variant="good">
+        ▶️ Play Game
+      </Button>
+    </div>
+  );
+}
+```
+
+**State used:**
+- `setPhase` - Changes app phase to navigate
+
+### 2. GameModeSelection.tsx
+
+**Purpose:** Choose between Role Revelation (active) or Full Game (coming soon)
+
+**Key features:**
+- Two clickable cards
+- "Role Revelation" - navigates to player-count phase
+- "Full Game" - disabled (coming soon)
+- Back button to return home
+
+**State used:**
+- `setPhase` - Navigate between phases
+- `setGameMode` - Store selected mode
+
+### 3. PlayerCountSelection.tsx
+
+**Purpose:** Choose 6 or 7 players
+
+**Key features:**
+- Two cards with team breakdown (good vs evil)
+- Shows which roles will be assigned
+- Cards aligned with `items-stretch` for consistent height
+- Buttons with pulse animation
+
+**Code pattern:**
+```tsx
+const handleSelectCount = (count: number) => {
+  setPlayerCount(count);  // Store player count
+  setPhase('setup');      // Navigate to setup
+};
+```
+
+**State used:**
+- `setPlayerCount` - Store selected count (6 or 7)
+- `setPhase` - Navigate to setup phase
+
+### 4. PlayerSetup.tsx
+
+**Purpose:** Collect player names
+
+**Key features:**
+- Input field for player names
+- Auto-refocus after adding player (useRef hook)
+- Real-time validation (duplicates, empty names)
+- "Shuffle & Start" button assigns roles and navigates
+
+**Important pattern - Auto-refocus:**
+```tsx
+const inputRef = useRef<HTMLInputElement>(null);
+
+const handleAddPlayer = () => {
+  // ... validation and add player ...
+
+  setName(''); // Clear input
+
+  // Auto-refocus input
+  setTimeout(() => {
+    inputRef.current?.focus();
+  }, 0);
+};
+
+// Attach ref to input
+<input ref={inputRef} ... />
+```
+
+**State used:**
+- `players` - List of added players
+- `playerCount` - Target number of players
+- `addPlayer` - Add player to list
+- `assignRolesAndStart` - Shuffle roles and navigate
+
+### 5. RoleReveal.tsx - The Most Complex Component
+
+**Purpose:** Multi-stage role revelation flow
+
+**Three stages:**
+
+#### Stage 1: Pass Screen
+Shows "Pass phone to [PlayerName]" with privacy warning.
+
+**Purpose:** Give player time to receive device privately.
+
+```tsx
+if (revealStage === 'pass') {
+  return (
+    <div>
+      <h1>Pass Phone To</h1>
+      <h2>{currentPlayer.name}</h2>
+      <Button onClick={handlePassToPlayer}>
+        I'm {currentPlayer.name}, Reveal My Role →
+      </Button>
+    </div>
+  );
+}
+```
+
+#### Stage 2: Blur Screen
+Shows blurred role with 3-second countdown.
+
+**Purpose:**
+- All players wait same time (prevents timing attacks)
+- Build anticipation
+
+**Key feature:** Both the dotted area AND button are clickable.
+
+```tsx
+if (revealStage === 'blur') {
+  return (
+    <div>
+      {/* Clickable dotted border area */}
+      <div className="cursor-pointer" onClick={handleReveal}>
+        {isRevealing ? (
+          <div className="text-8xl animate-pulse">{countdown}</div>
+        ) : (
+          <div className="blur-lg">🎭 Your Role</div>
+        )}
+      </div>
+
+      {/* Button also triggers reveal */}
+      <Button onClick={handleReveal} disabled={isRevealing}>
+        {isRevealing ? `Revealing... (${countdown}s)` : 'Reveal My Role'}
+      </Button>
+    </div>
+  );
+}
+```
+
+**Countdown implementation:**
+```tsx
+const [countdown, setCountdown] = useState(3);
+const [isRevealing, setIsRevealing] = useState(false);
+
+useEffect(() => {
+  if (isRevealing && countdown > 0) {
+    setTimeout(() => setCountdown(countdown - 1), 1000);
+  } else if (isRevealing && countdown === 0) {
+    setRevealStage('revealed'); // Move to next stage
+  }
+}, [isRevealing, countdown]);
+```
+
+#### Stage 3: Revealed Screen
+Shows role and visible players.
+
+**Key features:**
+- Show role emoji, name, alignment
+- Show visible players (different for each role)
+- Special message for Perceival
+- "Next Player" button
+
+**State used:**
+- `getCurrentPlayer` - Get current player from store
+- `getVisiblePlayers` - Get players visible to current player
+- `nextPlayer` - Move to next player
+
+---
+
+## State Management with Zustand
+
+### What is Zustand?
+
+Zustand is a **global state store** - a centralized place to store data that multiple components need access to.
+
+**Why needed?**
+React components are isolated. Without a global store, passing data between components requires "prop drilling" (passing props through many levels).
+
+### gameStore.ts Structure
+
+```typescript
+interface GameState {
+  // ===== DATA (State) =====
+  players: Player[];              // List of players with roles
+  phase: GamePhase;               // Current app phase
+  currentPlayerIndex: number;     // Which player is revealing
+  playerCount: number | null;     // Target number (6 or 7)
+  gameMode: GameMode;             // Role revelation or full game
+  gameSummaryRevealed: boolean;   // Has summary been shown?
+
+  // ===== ACTIONS (Functions) =====
+  setPhase: (phase: GamePhase) => void;
+  setGameMode: (mode: GameMode) => void;
+  setPlayerCount: (count: number) => void;
+  addPlayer: (name: string) => void;
+  removePlayer: (id: string) => void;
+  assignRolesAndStart: () => void;
+  nextPlayer: () => void;
+  getCurrentPlayer: () => Player | null;
+  getVisiblePlayers: (playerId: string) => Player[];
+  resetGame: () => void;
+  revealGameSummary: () => void;
+}
+```
+
+### How to Use Zustand
+
+**1. Import the store:**
+```tsx
+import { useGameStore } from '@/store/gameStore';
+```
+
+**2. Extract what you need:**
+```tsx
+const { players, phase, addPlayer, setPhase } = useGameStore();
+```
+
+**3. Read state:**
+```tsx
+<div>Current phase: {phase}</div>
+<div>Total players: {players.length}</div>
+```
+
+**4. Update state:**
+```tsx
+<button onClick={() => setPhase('setup')}>Go to Setup</button>
+<button onClick={() => addPlayer('Alice')}>Add Alice</button>
+```
+
+### Key Store Functions Explained
+
+#### assignRolesAndStart()
+Assigns random roles to players and starts game.
+
+**How it works:**
+1. Get player names from state
+2. Get role preset for player count (6 or 7)
+3. Shuffle roles using Fisher-Yates algorithm
+4. Assign roles to players
+5. Set phase to 'reveal'
+
+```typescript
+assignRolesAndStart: () => {
+  const count = get().playerCount;
+  const playerNames = get().players.map(p => p.name);
+  const assignedPlayers = assignRoles(playerNames, count);
+
+  set({ players: assignedPlayers, phase: 'reveal' });
+}
+```
+
+#### getVisiblePlayers(playerId)
+Returns list of players visible to the given player.
+
+**Logic:**
+```typescript
+Merlin sees:      All evil EXCEPT Modred
+Perceival sees:   Merlin + Morgana (can't tell which is which)
+Evil sees:        Other evil EXCEPT Oberon
+Oberon sees:      No one
+Arthur sees:      No one
+```
+
+---
+
+## Role Visibility Logic
+
+### How Visibility Works
+
+Each role has different visibility rules. The `getVisiblePlayers` function implements these rules.
 
 ### Visibility Matrix
 
-| Role | What They See | Logic |
-|------|---------------|-------|
-| **Merlin** | Minion, Assassin, Morgana, Oberon | All evil except Modred |
-| **Perceival** | Merlin, Morgana | Cannot distinguish who is who |
-| **Arthur** | Nothing | "You are Good" |
-| **Morgana** | All evil (except Oberon) | Same as other evil |
-| **Modred** | All evil (except Oberon) | Hidden from Merlin |
-| **Minion** | All evil (except Oberon) | Standard evil visibility |
-| **Assassin** | All evil (except Oberon) | Standard evil visibility |
-| **Oberon** | Nothing | "You are Evil" (lone wolf) |
+| Role | Sees |
+|------|------|
+| **Merlin** | Morgana, Assassin, Minion, Oberon (NOT Modred) |
+| **Perceival** | Merlin, Morgana (can't distinguish) |
+| **Morgana** | Other evil (NOT Oberon) |
+| **Assassin** | Other evil (NOT Oberon) |
+| **Minion** | Other evil (NOT Oberon) |
+| **Modred** | Other evil (NOT Oberon) |
+| **Oberon** | No one |
+| **Arthur** | No one |
 
-### Implementation Logic (avalon.js:41-70)
+### Implementation
 
-```javascript
-// Populate visibility arrays
-$.each(characterhash, function (key, value) {
-  if (value === 'Minion' || value === 'Assassin') {
-    Evil.push(key);      // Other evil players see them
-    Merlin.push(key);    // Merlin sees them
+```typescript
+getVisiblePlayers: (playerId: string) => {
+  const player = get().players.find(p => p.id === playerId);
+  const role = player?.role;
+
+  if (role === 'Merlin') {
+    // See all evil EXCEPT Modred
+    return players.filter(p =>
+      ['Morgana', 'Assassin', 'Minion', 'Oberon'].includes(p.role)
+    );
   }
-  else if (value === 'Merlin') {
-    Perceival.push(key); // Perceival sees Merlin
+
+  if (role === 'Perceival') {
+    // See Merlin and Morgana (ambiguous)
+    return players.filter(p =>
+      ['Merlin', 'Morgana'].includes(p.role)
+    );
   }
-  else if (value === 'Morgana') {
-    Perceival.push(key); // Perceival sees Morgana (as "Merlin?")
-    Merlin.push(key);    // Merlin sees Morgana
-    Evil.push(key);      // Other evil see Morgana
+
+  if (['Morgana', 'Assassin', 'Minion', 'Modred'].includes(role)) {
+    // Evil sees other evil EXCEPT Oberon
+    return players.filter(p =>
+      ['Morgana', 'Assassin', 'Minion', 'Modred'].includes(p.role)
+      && p.id !== playerId
+    );
   }
-  else if (value === 'Modred') {
-    Evil.push(key);      // Other evil see Modred
-    // NOT added to Merlin array (hidden from Merlin)
-  }
-  else if (value === 'Oberon') {
-    Merlin.push(key);    // Merlin sees Oberon
-    // NOT added to Evil array (hidden from evil)
-  }
-});
-```
 
----
-
-## File Structure
-
-```
-/home/user/Avalon-The-Resistance/
-├── index.html              # Main UI (102 lines)
-├── avalon.js               # Game logic (129 lines)
-├── avalon.css              # Custom styles (27 lines)
-├── bootstrap.min.css       # Bootstrap framework
-├── jquery-1.11.3.min.js    # jQuery library
-├── README.md               # Project description
-├── .gitattributes          # Git configuration
-└── .git/                   # Git repository
-```
-
-### File Responsibilities
-
-#### index.html (UI Structure)
-- **Lines 1-10**: HTML5 boilerplate, meta, includes
-- **Lines 12-25**: Player name input field
-- **Lines 26-60**: Character role radio buttons (8 roles)
-- **Lines 61-73**: Submit and Reveal buttons
-- **Lines 74-87**: Display areas (content, revealplayer)
-- **Lines 88-98**: Navigation buttons (Role, Next)
-
-**Key DOM Elements**:
-- `#playername` - Text input for player name
-- `input[name=characters]` - Radio buttons for role selection
-- `#submitcharacter` - Submit player button
-- `#revealrole` - Start revelation phase button
-- `#content` - Shows current player name/role
-- `#revealplayer` - Shows visible characters to current role
-- `#role` - Show role info button (hidden initially)
-- `#next` - Next player button (hidden initially)
-
-#### avalon.js (Game Logic)
-- **Lines 1-2**: Global data structures
-- **Lines 5-30**: Submit character handler (validation, storage)
-- **Lines 37-70**: Reveal roles handler (populate visibility arrays)
-- **Lines 77-101**: Role display handler (show role + visible players)
-- **Lines 106-118**: Next player handler (navigation logic)
-- **Lines 122-127**: Utility function (ToTitleCase)
-
-#### avalon.css (Styling)
-- **Lines 2-4**: Form margin
-- **Lines 6-11**: Reveal player display styling (monospace, 100px height)
-- **Lines 13-18**: Content display styling (monospace, 50px height)
-- **Lines 20-26**: Hide navigation buttons initially
-
----
-
-## Code Analysis
-
-### Strengths
-
-1. **Simplicity**: Minimal dependencies, easy to understand
-2. **Clear Separation**: HTML structure, CSS styling, JS logic
-3. **Validation**: Name/role validation, duplicate checking
-4. **User Experience**: Title case conversion, clear button states
-5. **Responsive**: Bootstrap grid works on mobile devices
-6. **Lightweight**: Total size ~300 KB (including dependencies)
-
-### Code Quality Issues
-
-#### 1. Global Scope Pollution (avalon.js:1-2, 37-39, 76)
-```javascript
-// All variables in global scope - can conflict with other scripts
-var characterhash = {};
-var characterarray = [];
-var Merlin = [];
-var Perceival = [];
-var Evil = [];
-var counter = 0;
-```
-
-**Problem**: Any script on page can modify these variables
-
-**Better Approach**: Encapsulate in IIFE or module
-
-#### 2. Magic Strings (throughout avalon.js)
-```javascript
-// Hardcoded role names scattered throughout code
-if (value === 'Minion' || value === 'Assassin') { ... }
-if (characterhash[characterarray[counter]] === 'Merlin') { ... }
-```
-
-**Problem**: Changes require editing multiple locations
-
-**Better Approach**: Constants object
-```javascript
-const ROLES = {
-  MERLIN: 'Merlin',
-  ASSASSIN: 'Assassin',
-  // ...
+  // Oberon and Arthur see no one
+  return [];
 }
 ```
 
-#### 3. Tight Coupling (avalon.js:77-101)
-```javascript
-// Business logic directly manipulates DOM
-$('#content').text(characterarray[counter] + ' : ' + characterhash[characterarray[counter]]);
-$('#revealplayer').text('Evil: ' + Merlin.join(', '));
+---
+
+## Styling with Tailwind CSS
+
+### Tailwind Utility Classes
+
+Tailwind provides pre-built CSS classes for common styles.
+
+**Common patterns:**
+
+```tsx
+// Layout
+className="flex items-center justify-center"  // Flexbox centering
+className="grid grid-cols-2 gap-4"            // 2-column grid
+
+// Spacing
+className="p-4"      // padding: 1rem (all sides)
+className="px-4"     // padding-left and padding-right
+className="py-2"     // padding-top and padding-bottom
+className="m-4"      // margin: 1rem
+className="gap-4"    // gap: 1rem (for flex/grid)
+
+// Sizing
+className="w-full"   // width: 100%
+className="h-16"     // height: 4rem
+className="min-h-screen"  // min-height: 100vh
+
+// Colors (custom theme)
+className="bg-bg-primary"     // Background: #0a0a0f
+className="bg-good"           // Background: #4ade80 (green)
+className="bg-evil"           // Background: #ef4444 (red)
+className="text-text-primary" // Text: #f8fafc (white)
+
+// Typography
+className="text-xl"          // font-size: 1.25rem
+className="font-bold"        // font-weight: 700
+className="text-center"      // text-align: center
+
+// Borders
+className="border border-border"  // 1px solid border
+className="rounded-lg"            // border-radius: 0.5rem
+
+// Shadows
+className="shadow-xl"        // box-shadow (large)
+
+// Transitions
+className="transition-all"   // transition: all 0.3s
+className="hover:scale-105"  // scale on hover
+
+// Responsive
+className="sm:text-xl md:text-2xl lg:text-3xl"  // Different sizes per breakpoint
 ```
 
-**Problem**: Cannot test logic without DOM, hard to refactor UI
+### Custom Theme Colors
 
-**Better Approach**: Separate data/logic from presentation
+Defined in `tailwind.config.ts`:
 
-#### 4. No Error Handling
-```javascript
-// What if characterarray is empty?
-$('#content').text(characterarray[0]); // Undefined error
+```typescript
+colors: {
+  // Backgrounds
+  'bg-primary': '#0a0a0f',    // Darkest
+  'bg-secondary': '#1a1a2e',  // Medium dark
+  'bg-tertiary': '#16213e',   // Lighter dark
 
-// What if user clicks buttons out of order?
-// No guard against calling reveal before submitting players
+  // Teams
+  'good': '#4ade80',  // Green
+  'evil': '#ef4444',  // Red
+
+  // UI
+  'text-primary': '#f8fafc',    // White text
+  'text-secondary': '#cbd5e1',  // Gray text
+  'border': '#334155',          // Border color
+  'accent': '#f59e0b',          // Orange/amber (warnings)
+}
 ```
 
-#### 5. Outdated Dependencies
-- **jQuery 1.11.3**: Released May 2014 (10+ years old)
-  - Missing modern features
-  - Potential security vulnerabilities
-  - Larger bundle size than needed
-- **Bootstrap 3**: Superseded by v4 and v5
-  - Older responsive patterns
-  - jQuery dependency
+### Custom Animations
 
-### Logic Issues
+Defined in `index.css`:
 
-#### 1. Player Count Validation Missing
-```javascript
-// No check for minimum/maximum players
-// Avalon requires 5-10 players
-$('#revealrole').click(function() {
-  // Should validate characterarray.length >= 5 && <= 10
-  // Should validate good vs evil balance
-})
+```css
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
 ```
 
-#### 2. Role Balance Not Enforced
-```javascript
-// Can create game with all good or all evil
-// Should validate evil count based on player count:
-// 5-6 players: 2 evil
-// 7 players: 3 evil
-// 8-9 players: 3-4 evil
-// 10 players: 4 evil
+**Usage:**
+```tsx
+<Button className="animate-pulse-subtle">
+  Play Game
+</Button>
 ```
 
-#### 3. Character Selection Not Guided
-Current implementation allows any combination of characters, even invalid ones:
-- Can have Perceival without Merlin
-- Can have Assassin without Merlin (defeats purpose)
-- Can have only special characters (no generic good/evil)
+---
 
-**Standard Avalon Setup**:
+## React Patterns Used
+
+### 1. Conditional Rendering
+
+Show/hide components based on conditions.
+
+```tsx
+// Phase-based routing
+{phase === 'home' && <HomePage />}
+{phase === 'setup' && <PlayerSetup />}
+
+// Conditional UI
+{error && <div className="text-evil">{error}</div>}
+{players.length > 0 && <PlayerList />}
 ```
-5 players: Merlin, Assassin, Perceival, 2x Minion
-6 players: + Morgana
-7 players: + Oberon
-8-10 players: + Modred, more generic roles
+
+### 2. Conditional Styling
+
+Change styles based on state.
+
+```tsx
+// Ternary operator
+<Button className={allPlayersAdded ? 'bg-good' : 'bg-gray-500'}>
+  {allPlayersAdded ? 'Start' : 'Add more players'}
+</Button>
+
+// Template literal with condition
+<Button className={`w-full ${canAddMore ? 'animate-pulse-subtle' : ''}`}>
+  Add Player
+</Button>
 ```
 
-### Security Issues (Client-Side)
+### 3. State + Effects (Timer Pattern)
 
-Since this is client-side only:
-1. **Console Manipulation**: Any player can open DevTools and see:
-   ```javascript
-   console.log(characterhash); // See all roles
+```tsx
+const [countdown, setCountdown] = useState(3);
+const [isRevealing, setIsRevealing] = useState(false);
+
+useEffect(() => {
+  if (isRevealing && countdown > 0) {
+    const timer = setTimeout(() => {
+      setCountdown(countdown - 1);
+    }, 1000);
+    return () => clearTimeout(timer); // Cleanup
+  } else if (isRevealing && countdown === 0) {
+    // Countdown complete
+    setRevealStage('revealed');
+  }
+}, [isRevealing, countdown]);
+```
+
+### 4. Refs for DOM Access
+
+```tsx
+const inputRef = useRef<HTMLInputElement>(null);
+
+// Focus input programmatically
+const focusInput = () => {
+  inputRef.current?.focus();
+};
+
+// Attach to element
+<input ref={inputRef} />
+```
+
+### 5. Event Handlers
+
+```tsx
+// Inline arrow function
+<Button onClick={() => setPhase('setup')}>Next</Button>
+
+// Named function
+const handleClick = () => {
+  console.log('Clicked!');
+  setPhase('setup');
+};
+<Button onClick={handleClick}>Next</Button>
+
+// With parameters
+<Button onClick={() => handleSelectCount(6)}>6 Players</Button>
+```
+
+---
+
+## Adding New Features
+
+### Example: Adding 5-Player Support
+
+**Step 1: Update game-rules.ts**
+
+Add 5-player preset:
+```typescript
+export const ROLE_PRESETS: { [key: number]: Role[] } = {
+  5: ['Merlin', 'Perceival', 'Arthur', 'Morgana', 'Assassin'],
+  6: ['Merlin', 'Perceival', 'Arthur', 'Arthur', 'Morgana', 'Assassin'],
+  7: ['Merlin', 'Perceival', 'Arthur', 'Arthur', 'Morgana', 'Assassin', 'Minion'],
+};
+```
+
+**Step 2: Update game.types.ts**
+
+```typescript
+export type PlayerCount = 5 | 6 | 7 | 8 | 9 | 10;
+```
+
+**Step 3: Update PlayerCountSelection.tsx**
+
+Add a new card:
+```tsx
+{/* 5 Players */}
+<Card onClick={() => handleSelectCount(5)}>
+  <CardHeader>
+    <div className="text-5xl font-bold text-good">5</div>
+    <CardTitle>Players</CardTitle>
+    <CardDescription>Compact setup</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {/* Team breakdown */}
+    <div>Good Team: 3 players</div>
+    <div>Evil Team: 2 players</div>
+
+    {/* Roles */}
+    <div>
+      <div>🧙 Merlin</div>
+      <div>🛡️ Perceival</div>
+      <div>⚔️ Arthur</div>
+      <div>🔮 Morgana</div>
+      <div>🗡️ Assassin</div>
+    </div>
+
+    <Button variant="good" size="lg" className="w-full">
+      Choose 5 Players →
+    </Button>
+  </CardContent>
+</Card>
+```
+
+**Step 4: Test**
+
+1. Run `npm run dev`
+2. Click "Play Game"
+3. Choose 5 players
+4. Add 5 player names
+5. Verify roles assigned correctly
+
+---
+
+## Troubleshooting
+
+### Issue: Button doesn't look clickable
+
+**Symptom:** Button is green but has no pulse animation.
+
+**Solution:**
+Check if `animate-pulse-subtle` class is applied:
+```tsx
+<Button className="animate-pulse-subtle">Play Game</Button>
+```
+
+### Issue: Input doesn't refocus after adding player
+
+**Symptom:** After clicking "Add Player", cursor doesn't return to input.
+
+**Solution:**
+1. Check if `inputRef` is created:
+   ```tsx
+   const inputRef = useRef<HTMLInputElement>(null);
    ```
-2. **No Privacy**: Previous player could watch next player enter info
-3. **No Persistence**: Accidental refresh loses all data
-4. **No Verification**: Cannot verify all players saw their role
 
-**Mitigation**: These are acceptable for the use case (pass-around device with trust)
+2. Check if ref is attached to input:
+   ```tsx
+   <input ref={inputRef} />
+   ```
 
----
+3. Check if `focus()` is called after adding:
+   ```tsx
+   setTimeout(() => inputRef.current?.focus(), 0);
+   ```
 
-## Current Limitations
+### Issue: Role visibility is wrong
 
-### Functional Limitations
+**Symptom:** Merlin sees Modred, or Evil doesn't see each other.
 
-1. **Incomplete Game**: Only handles role revelation, not:
-   - Mission proposal phase
-   - Voting on teams
-   - Quest success/failure
-   - Assassination phase (if good wins)
-   - Score tracking across rounds
+**Solution:**
+Check `getVisiblePlayers` logic in `gameStore.ts`. Verify the role filters match the Avalon rules.
 
-2. **No Configuration**:
-   - Cannot customize visibility rules
-   - Cannot add custom roles
-   - Cannot save/load game setups
+### Issue: TypeScript errors
 
-3. **No State Persistence**:
-   - Page refresh loses all data
-   - Cannot pause and resume
-   - No game history
+**Symptom:** Red underlines in VSCode, build fails.
 
-4. **Single Device Only**:
-   - Cannot support remote players
-   - All players must be physically present
-   - Must pass one device around
+**Common causes:**
+1. **Missing type:** Add type annotation
+   ```tsx
+   // ❌ Bad
+   const players = [];
 
-### Technical Debt
+   // ✅ Good
+   const players: Player[] = [];
+   ```
 
-1. **No Build Process**:
-   - No minification
-   - No tree shaking
-   - No code splitting
-   - Larger than necessary bundle size
+2. **Wrong type:** Check `game.types.ts` for correct type
+   ```tsx
+   // ❌ Bad
+   const phase: string = 'home';
 
-2. **No Testing**:
-   - No unit tests for game logic
-   - No integration tests
-   - No E2E tests
-   - Manual testing only
+   // ✅ Good
+   const phase: GamePhase = 'home';
+   ```
 
-3. **No Modern JavaScript**:
-   - ES5 syntax only
-   - No modules
-   - No async/await
-   - No classes
+### Issue: Tailwind classes not working
 
-4. **Accessibility Issues**:
-   - No ARIA labels
-   - No keyboard navigation focus management
-   - No screen reader support
-   - Poor color contrast in some areas
+**Symptom:** Classes applied but no styling.
 
-5. **Mobile UX**:
-   - Small touch targets
-   - No orientation lock
-   - No prevent screen sleep
-   - No haptic feedback
+**Solution:**
+1. Check if class is in `tailwind.config.ts` theme
+2. Verify class name spelling
+3. Check if conflicting classes
+4. Clear cache and rebuild: `rm -rf dist && npm run build`
 
----
+### Issue: Component not updating
 
-## Development Notes
+**Symptom:** State changes but UI doesn't update.
 
-### Git History (Recent Commits)
+**Solution:**
+1. Check if using Zustand correctly:
+   ```tsx
+   // ❌ Bad: Mutating state directly
+   players.push(newPlayer);
 
-```
-c3e2af2 - Update README.md
-cfc2a09 - Validation for duplicate roles + Title case
-2673df5 - Modred - Bug fix
-86be688 - Remove long message
-c9cdf58 - Success button/message overlap fix
-```
+   // ✅ Good: Using store action
+   addPlayer(newPlayer.name);
+   ```
 
-**Active Development Areas**:
-- UX improvements (button positioning, messages)
-- Input validation (duplicate roles, title case)
-- Bug fixes (Modred visibility logic)
-
-### Browser Compatibility
-
-**Tested/Expected**:
-- Chrome/Edge: ✓ (jQuery 1.11.3 supports)
-- Firefox: ✓
-- Safari: ✓
-- IE 9+: ✓ (Bootstrap 3 + jQuery 1.11.3)
-- Mobile browsers: ✓ (Bootstrap responsive)
-
-### Performance
-
-**Load Time**: < 1 second on 3G
-- Total size: ~300 KB (unminified)
-- 3 CSS requests
-- 2 JS requests
-- No images
-
-**Runtime Performance**: Excellent
-- Simple DOM manipulation
-- No complex calculations
-- Max ~10 players = minimal data
-
----
-
-## Code Examples & Patterns
-
-### Event Handler Pattern (avalon.js:5-30)
-
-```javascript
-$(document).ready(function() {
-  $('#submitcharacter').click(function() {
-    // 1. Get input values
-    var character = $('input[name=characters]:checked').val();
-    var name = ToTitleCase($('#playername').val());
-
-    // 2. Validate
-    if (name.trim().length === 0 || character === undefined) {
-      alert("Enter a name and select your role");
-      return false;
-    }
-
-    // 3. Check duplicates
-    if (!(character === 'Minion' || character === 'Arthur')) {
-      var returnvalue = $.inArray(character, Object.values(characterhash));
-      if (returnvalue !== -1) {
-        alert('This role is already taken...');
-        return false;
-      }
-    }
-
-    // 4. Store data
-    characterhash[name] = character;
-    characterarray.push(name);
-
-    // 5. Reset form
-    $('input[name=characters]:checked').prop('checked', false);
-    $('#playername').val('');
-  });
-});
-```
-
-### State Management Pattern
-
-```javascript
-// State is implicit through DOM and global variables
-var counter = 0; // Current player index
-
-// State transitions controlled by button clicks
-$('#next').click(function() {
-  if (counter == characterarray.length - 1) {
-    // End state: disable buttons
-    $('#next').prop('disabled', true);
-    $('#role').prop('disabled', true);
-  } else {
-    // Continue state: increment counter
-    counter++;
-    $('#content').text(characterarray[counter]);
-  }
-});
-```
-
-### Array Population Pattern (avalon.js:49-68)
-
-```javascript
-// Declarative approach: iterate once, populate multiple arrays
-$.each(characterhash, function (key, value) {
-  // Add to appropriate visibility arrays based on role
-  if (value === 'Minion' || value === 'Assassin') {
-    Evil.push(key);
-    Merlin.push(key);
-  }
-  // ... more conditions
-});
-```
-
----
-
-## Testing Considerations
-
-### Manual Test Cases
-
-**Test 1: Valid 5-Player Game**
-```
-Input:
-  Alice -> Merlin
-  Bob -> Assassin
-  Charlie -> Morgana
-  David -> Perceival
-  Eve -> Minion
-
-Expected Output:
-  Merlin sees: Bob, Charlie (Assassin, Morgana)
-  Perceival sees: Alice, Charlie (Merlin, Morgana)
-  Evil sees: Bob, Charlie, Eve (all evil)
-  Assassin sees: Bob, Charlie, Eve
-  Morgana sees: Bob, Charlie, Eve
-```
-
-**Test 2: Oberon Edge Case**
-```
-Input:
-  Alice -> Merlin
-  Bob -> Oberon
-  Charlie -> Assassin
-
-Expected Output:
-  Merlin sees: Bob (Oberon only)
-  Oberon sees: "You are Evil" (no other evil visible)
-  Assassin sees: Charlie (only self, not Oberon)
-```
-
-**Test 3: Duplicate Role Validation**
-```
-Input:
-  Alice -> Merlin
-  Bob -> Merlin (attempt)
-
-Expected: Alert "This role is already taken..."
-```
-
-### Automated Testing Needs
-
-1. **Unit Tests** (game logic):
-   - Role visibility calculation
-   - Duplicate detection
-   - Title case conversion
-   - Player count validation
-
-2. **Integration Tests**:
-   - Submit player flow
-   - Reveal roles flow
-   - Navigation flow
-
-3. **E2E Tests**:
-   - Complete 5-player game
-   - Complete 10-player game
-   - Error scenarios
+2. Check if state is actually changing (add console.log)
 
 ---
 
 ## Deployment
 
-### Current Deployment
+### Current Setup
 
-- **Platform**: GitHub Pages
-- **URL**: https://syedalisait.github.io/Avalon-The-Resistance/
-- **Branch**: `gh-pages` (likely)
-- **Build**: None (direct file serving)
+**Platform:** GitHub Pages (static hosting)
 
-### Deployment Process
+**Build process:**
+1. Run `npm run build` in `avalon-react/`
+2. Output goes to `avalon-react/dist/`
+3. GitHub Pages serves from `dist/`
+
+### Manual Deployment
 
 ```bash
-# 1. Make changes locally
-git add .
-git commit -m "Your message"
-
-# 2. Push to main branch
-git push origin main
-
-# 3. GitHub Pages auto-deploys
-# (if configured to deploy from main branch root or /docs folder)
+cd avalon-react
+npm run build
+# Commit and push dist/ folder
+git add dist/
+git commit -m "Build for deployment"
+git push
 ```
 
-### Environment Variables
-None (static site, no server-side config)
+### Vercel Deployment (Alternative)
+
+1. Connect GitHub repo to Vercel
+2. Set build settings:
+   - **Root Directory:** `avalon-react`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. Auto-deploys on every push
 
 ---
 
-## Future Enhancement Ideas
+## Future Full Game Features
 
-### Immediate Improvements
-1. Add player count validation (5-10 players)
-2. Add role balance validation
-3. Add "Start Over" button
-4. Add local storage persistence
-5. Improve mobile touch targets
+For implementing the full Avalon game (missions, voting, assassination), refer to **ARCHITECTURE_PLAN.md** which contains:
 
-### Medium-Term Enhancements
-1. Implement full game (missions, voting, assassination)
-2. Add sound effects and animations
-3. Add game history/statistics
-4. Add customizable role sets
-5. Improve accessibility (ARIA, keyboard nav)
+### Mission Phase
+- Quest proposal UI
+- Team selection
+- Voting mechanism
+- Success/fail cards
 
-### Long-Term Vision
-1. Add server backend for remote multiplayer
-2. Add user accounts and matchmaking
-3. Add AI players for practice
-4. Add game variants (original Resistance, expansions)
-5. Add localization (i18n)
+### Quest Resolution
+- Hidden vote submission
+- Simultaneous reveal
+- Quest tracker (5 quests)
 
----
+### Assassination Phase
+- Assassin selection UI
+- Merlin identification
+- Win condition logic
 
-## Resources
+### Testing Strategy
+- Vitest for unit tests
+- React Testing Library for components
+- Playwright for E2E tests
 
-### Official Game Rules
-- Game Wiki: http://web.eecs.umich.edu/~gameprof/gamewiki/index.php/The_Resistance:_Avalon
-- Official Rules PDF: http://upload.snakesandlattes.com/rules/r/ResistanceAvalon.pdf
-
-### Dependencies Documentation
-- jQuery 1.11.3: https://api.jquery.com/
-- Bootstrap 3: https://getbootstrap.com/docs/3.4/
-
-### Repository
-- GitHub: https://github.com/syedalisait/Avalon-The-Resistance
-- Current Branch: `claude/frontend-architecture-planning-eB4HA`
+### Architecture Patterns
+- State machine for game phases
+- Event sourcing for game history
+- Optimistic updates for better UX
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2026-01-09
-**Author**: Claude (AI Assistant)
-**Status**: Initial comprehensive documentation
+## Quick Reference
+
+### Component Hierarchy
+```
+App.tsx
+├── HomePage
+├── GameModeSelection
+├── PlayerCountSelection
+├── PlayerSetup
+│   ├── Button (Add Player)
+│   ├── Button (Shuffle & Start)
+│   └── Card (Player list)
+└── RoleReveal
+    ├── Pass Screen
+    ├── Blur Screen (countdown)
+    └── Revealed Screen
+```
+
+### State Flow
+```
+User Action → Component Event Handler → Zustand Action → State Update → UI Re-render
+```
+
+### File Editing Checklist
+
+When adding a new feature:
+- [ ] Update types in `game.types.ts`
+- [ ] Add business logic to `game-rules.ts`
+- [ ] Add validation to `validators.ts`
+- [ ] Update store in `gameStore.ts`
+- [ ] Create/update component
+- [ ] Test in browser
+- [ ] Build and verify: `npm run build`
+
+---
+
+## Summary
+
+This React app uses:
+- **Components** for reusable UI
+- **Zustand** for global state
+- **TypeScript** for type safety
+- **Tailwind** for styling
+- **Phase-based navigation** for game flow
+
+Key files:
+- `App.tsx` - Router
+- `gameStore.ts` - State
+- `game-rules.ts` - Avalon rules
+- Component files - UI screens
+
+For full game implementation, see **ARCHITECTURE_PLAN.md**.
