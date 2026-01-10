@@ -11,12 +11,14 @@ interface GameState {
   currentPlayerIndex: number;
   phase: GamePhase;
   gameMode: GameMode | null;
+  playerCount: number | null;
 
   // Actions
   addPlayer: (name: string, role: Role) => void;
   removePlayer: (playerId: string) => void;
   setPhase: (phase: GamePhase) => void;
   setGameMode: (mode: GameMode) => void;
+  setPlayerCount: (count: number) => void;
   startReveal: () => void;
   nextPlayer: () => void;
   resetGame: () => void;
@@ -32,6 +34,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   currentPlayerIndex: 0,
   phase: 'home',
   gameMode: null,
+  playerCount: null,
 
   addPlayer: (name, role) => set((state) => ({
     players: [...state.players, {
@@ -48,6 +51,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
   setPhase: (phase) => set({ phase }),
 
   setGameMode: (mode) => set({ gameMode: mode }),
+
+  setPlayerCount: (count) => set({ playerCount: count }),
 
   startReveal: () => {
     const { isValidGame } = get();
@@ -68,7 +73,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
     players: [],
     currentPlayerIndex: 0,
     phase: 'home',
-    gameMode: null
+    gameMode: null,
+    playerCount: null
   }),
 
   isValidGame: () => {
