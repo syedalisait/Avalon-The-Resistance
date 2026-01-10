@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Player } from '@/types/game.types';
 
+type RevealStage = 'pass' | 'blur' | 'revealed';
+
 export function RoleReveal() {
-  const [isRevealed, setIsRevealed] = useState(false);
+  const [revealStage, setRevealStage] = useState<RevealStage>('pass');
   const { getCurrentPlayer, getVisiblePlayers, nextPlayer, phase, resetGame } = useGameStore();
 
   const currentPlayer = getCurrentPlayer();
@@ -21,12 +23,16 @@ export function RoleReveal() {
   const visiblePlayers = getVisiblePlayers(currentPlayer.id);
   const isGood = roleInfo.alignment === 'Good';
 
+  const handlePassToPlayer = () => {
+    setRevealStage('blur');
+  };
+
   const handleReveal = () => {
-    setIsRevealed(true);
+    setRevealStage('revealed');
   };
 
   const handleNext = () => {
-    setIsRevealed(false);
+    setRevealStage('pass');
     nextPlayer();
   };
 
@@ -57,7 +63,45 @@ export function RoleReveal() {
     );
   }
 
-  if (!isRevealed) {
+  // Pass screen - before revealing role
+  if (revealStage === 'pass') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
+        <div className="w-full max-w-2xl space-y-6 text-center">
+          <div className="text-6xl mb-4">📱</div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-accent mb-2">
+            Pass Phone To
+          </h1>
+          <h2 className="text-5xl sm:text-6xl font-bold text-text-primary">
+            {currentPlayer.name}
+          </h2>
+
+          <Card className="bg-accent bg-opacity-10 border-accent">
+            <CardContent className="pt-6 space-y-4">
+              <p className="text-text-primary text-lg">
+                ⚠️ Only <strong className="text-accent">{currentPlayer.name}</strong> should see this screen
+              </p>
+              <p className="text-text-secondary text-sm">
+                Make sure no one else is looking at the screen before tapping below
+              </p>
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={handlePassToPlayer}
+            size="lg"
+            variant="good"
+            className="w-full text-lg py-6"
+          >
+            I'm {currentPlayer.name}, Reveal My Role →
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Blur screen - tap to reveal
+  if (revealStage === 'blur') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-2xl space-y-6 text-center">
@@ -96,6 +140,8 @@ export function RoleReveal() {
       </div>
     );
   }
+
+  // Revealed screen - show role and visible players
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
