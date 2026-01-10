@@ -15,7 +15,7 @@ export function RoleReveal() {
   const [revealStage, setRevealStage] = useState<RevealStage>('pass');
   const [isRevealing, setIsRevealing] = useState(false);
   const [countdown, setCountdown] = useState(REVEAL_DELAY_SECONDS);
-  const { players, getCurrentPlayer, getVisiblePlayers, nextPlayer, phase, resetGame } = useGameStore();
+  const { players, getCurrentPlayer, getVisiblePlayers, nextPlayer, phase, resetGame, gameSummaryRevealed, revealGameSummary } = useGameStore();
 
   const currentPlayer = getCurrentPlayer();
 
@@ -54,7 +54,43 @@ export function RoleReveal() {
     nextPlayer();
   };
 
-  if (phase === 'complete') {
+  // Pre-reveal: Show "Finish Game" button
+  if (phase === 'complete' && !gameSummaryRevealed) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
+        <div className="w-full max-w-2xl space-y-6 text-center">
+          <div className="text-6xl mb-4">🎮</div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">
+            Game Complete!
+          </h1>
+          <p className="text-text-secondary text-lg">
+            All players have seen their roles. Ready to reveal the full summary?
+          </p>
+
+          <Card className="bg-accent bg-opacity-10 border-accent">
+            <CardContent className="pt-6">
+              <p className="text-accent text-center">
+                ⚠️ After clicking "Finish Game", all player roles will be revealed.
+                Make sure everyone is ready!
+              </p>
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={revealGameSummary}
+            size="lg"
+            variant="good"
+            className="w-full text-lg py-6"
+          >
+            🎯 Finish Game & Reveal All Roles
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Post-reveal: Show game summary
+  if (phase === 'complete' && gameSummaryRevealed) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-2xl space-y-6">

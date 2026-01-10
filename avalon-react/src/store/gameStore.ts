@@ -12,6 +12,7 @@ interface GameState {
   phase: GamePhase;
   gameMode: GameMode | null;
   playerCount: number | null;
+  gameSummaryRevealed: boolean;
 
   // Actions
   addPlayer: (name: string) => void;
@@ -23,6 +24,7 @@ interface GameState {
   startReveal: () => void;
   nextPlayer: () => void;
   resetGame: () => void;
+  revealGameSummary: () => void;
 
   // Computed
   isValidGame: () => boolean;
@@ -36,6 +38,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   phase: 'home',
   gameMode: null,
   playerCount: null,
+  gameSummaryRevealed: false,
 
   addPlayer: (name) => set((state) => ({
     players: [...state.players, {
@@ -92,12 +95,15 @@ export const useGameStore = create<GameState>()((set, get) => ({
     return { currentPlayerIndex: nextIndex };
   }),
 
+  revealGameSummary: () => set({ gameSummaryRevealed: true }),
+
   resetGame: () => set({
     players: [],
     currentPlayerIndex: 0,
     phase: 'home',
     gameMode: null,
-    playerCount: null
+    playerCount: null,
+    gameSummaryRevealed: false
   }),
 
   isValidGame: () => {
