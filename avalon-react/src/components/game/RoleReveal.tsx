@@ -9,13 +9,13 @@ import type { Player } from '@/types/game.types';
 
 type RevealStage = 'pass' | 'blur' | 'revealed';
 
-const REVEAL_DELAY_SECONDS = 5;
+const REVEAL_DELAY_SECONDS = 3;
 
 export function RoleReveal() {
   const [revealStage, setRevealStage] = useState<RevealStage>('pass');
   const [isRevealing, setIsRevealing] = useState(false);
   const [countdown, setCountdown] = useState(REVEAL_DELAY_SECONDS);
-  const { getCurrentPlayer, getVisiblePlayers, nextPlayer, phase, resetGame } = useGameStore();
+  const { players, getCurrentPlayer, getVisiblePlayers, nextPlayer, phase, resetGame } = useGameStore();
 
   const currentPlayer = getCurrentPlayer();
 
@@ -57,17 +57,58 @@ export function RoleReveal() {
   if (phase === 'complete') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-2xl space-y-6 text-center">
-          <div className="text-6xl mb-4">✅</div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">
-            All Roles Revealed!
-          </h1>
-          <p className="text-text-secondary text-lg">
-            Everyone knows their role. The game can now begin!
-          </p>
+        <div className="w-full max-w-2xl space-y-6">
+          <div className="text-center space-y-2">
+            <div className="text-6xl mb-4">✅</div>
+            <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">
+              All Roles Revealed!
+            </h1>
+            <p className="text-text-secondary text-lg">
+              Everyone knows their role. The game can now begin!
+            </p>
+          </div>
+
+          {/* All Players and Roles */}
           <Card className="bg-bg-secondary border-border">
             <CardContent className="pt-6">
-              <p className="text-text-secondary mb-4">
+              <h3 className="text-xl font-semibold text-text-primary mb-4 text-center">
+                Game Summary - All Players & Roles
+              </h3>
+              <p className="text-text-secondary text-sm text-center mb-4">
+                Use this to verify roles at the end of the game
+              </p>
+              <div className="space-y-2">
+                {players.map((player: Player) => {
+                  const roleInfo = ROLES[player.role];
+                  return (
+                    <div
+                      key={player.id}
+                      className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg border border-border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{roleInfo.emoji}</span>
+                        <div>
+                          <div className="font-medium text-text-primary">{player.name}</div>
+                          <div className="text-xs text-text-secondary">{player.role}</div>
+                        </div>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        roleInfo.alignment === 'Good'
+                          ? 'bg-good bg-opacity-20 text-good'
+                          : 'bg-evil bg-opacity-20 text-evil'
+                      }`}>
+                        {roleInfo.alignment}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-bg-tertiary border-border">
+            <CardContent className="pt-6">
+              <p className="text-text-secondary text-center mb-4 text-sm">
                 You can now play Avalon using the traditional game components.
                 This app has completed the role setup phase.
               </p>
