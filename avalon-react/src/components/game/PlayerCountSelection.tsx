@@ -50,11 +50,11 @@ export function PlayerCountSelection() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-2 bg-good bg-opacity-10 rounded">
                   <span className="text-good font-semibold">Good Team</span>
-                  <span className="text-good font-bold">3 players</span>
+                  <span className="text-good font-bold">4 players</span>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-evil bg-opacity-10 rounded">
                   <span className="text-evil font-semibold">Evil Team</span>
-                  <span className="text-evil font-bold">3 players</span>
+                  <span className="text-evil font-bold">2 players</span>
                 </div>
               </div>
 
@@ -65,9 +65,9 @@ export function PlayerCountSelection() {
                   <div className="text-good">🧙 Merlin</div>
                   <div className="text-good">🛡️ Perceival</div>
                   <div className="text-good">⚔️ Arthur</div>
+                  <div className="text-good">⚔️ Arthur</div>
                   <div className="text-evil">🔮 Morgana</div>
                   <div className="text-evil">🗡️ Assassin</div>
-                  <div className="text-evil">⚔️ Arthur</div>
                 </div>
               </div>
 
